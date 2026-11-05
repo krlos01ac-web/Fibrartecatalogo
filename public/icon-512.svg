@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#2D6A4F"/>
+  <!-- Circular woven texture background -->
+  <circle cx="256" cy="256" r="170" fill="#B85D3B" opacity="0.95"/>
+  <circle cx="256" cy="256" r="128" fill="#F5EBE1" />
+  <!-- Stylized leaf & basket weave -->
+  <path d="M256 138 C186 186 186 326 256 374 C326 326 326 186 256 138 Z" fill="#2D6A4F"/>
+  <path d="M192 256 C224 240 288 240 320 256" stroke="#FAF6F0" stroke-width="10" stroke-linecap="round"/>
+  <path d="M202 213 C230 202 282 202 310 213" stroke="#FAF6F0" stroke-width="8" stroke-linecap="round"/>
+  <path d="M202 299 C230 310 282 310 310 299" stroke="#FAF6F0" stroke-width="8" stroke-linecap="round"/>
+  <!-- Little camera badge -->
+  <circle cx="352" cy="352" r="58" fill="#FAF6F0" />
+  <circle cx="352" cy="352" r="48" fill="#B85D3B" />
+  <path d="M334 346 h36 v22 h-36 z M344 338 h16 v8 h-16 z" fill="#FAF6F0"/>
+</svg>
+

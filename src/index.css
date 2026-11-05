@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-sand: #FAF6F0;
+    --bg-sand-dark: #F3ECE1;
+    --text-earth: #221510;
+    --accent-green: #2D6A4F;
+    --accent-green-dark: #1B4332;
+    --accent-terracotta: #B85D3B;
+    --accent-terracotta-dark: #8C3A1E;
+    --accent-straw: #D4A373;
+  }
+
+  body {
+    background-color: var(--bg-sand);
+    color: var(--text-earth);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Animações de pulso para gravação de áudio e feedback */
+@keyframes pulse-recording {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 16px rgba(220, 38, 38, 0);
+  }
+}
+
+.animate-pulse-recording {
+  animation: pulse-recording 1.5s infinite;
+}
+
+/* Efeito de toque tátil em botões gigantes */
+.tactile-button {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tactile-button:active {
+  transform: scale(0.97);
+}
+
+/* Otimização de scroll suave em mobile */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
