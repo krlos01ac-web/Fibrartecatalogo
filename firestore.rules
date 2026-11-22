@@ -1,0 +1,120 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: products
+// Document ID: productId (ex: 'prod-1', 'prod-1700000000000')
+// Fields:
+//   - name: string (required, 1-150 chars) - Nome da peça artesanal
+//   - description: string (required, 0-2000 chars) - Descrição detalhada da peça
+//   - price: string | null (required field, null ou string de 1-50 chars) - Preço exibido (ex: "R$ 45,00")
+//   - photoData: string (required, 10-1000000 chars) - Imagem Base64 / Data URI (JPEG ou SVG)
+//   - createdAt: number (required, timestamp numérico positivo, imutável em updates)
+//   - artisanId: string (optional, 0-100 chars) - Compatibilidade retroativa
+//   - artisanName: string (optional, 0-100 chars) - Compatibilidade retroativa
+//
+// Collection: settings
+// Document ID: 'store'
+// Fields:
+//   - contactPhone: string (required, 8-20 chars) - Número do WhatsApp para pedidos
+//   - storeName: string (required, 1-100 chars) - Nome da loja / cooperativa
+//   - updatedAt: number (required, timestamp numérico positivo)
+//
+// Todas as outras coleções: Bloqueio total (Default Deny).
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(str, minLen, maxLen) {
+      return str is string && str.size() >= minLen && str.size() <= maxLen;
+    }
+
+    function isValidTimestampNumber(num) {
+      return (num is int || num is float) && num > 0;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    // Validação estrita do schema e tipos de documentos de produtos
+    function isValidProduct(data) {
+      let allowedFields = ['name', 'description', 'price', 'photoData', 'createdAt', 'artisanId', 'artisanName'];
+      let requiredFields = ['name', 'description', 'price', 'photoData', 'createdAt'];
+
+      return hasRequiredFields(data, requiredFields) &&
+             hasOnlyAllowedFields(data, allowedFields) &&
+             validStringLength(data.name, 1, 150) &&
+             data.description is string && data.description.size() <= 2000 &&
+             (data.price == null || validStringLength(data.price, 1, 50)) &&
+             validStringLength(data.photoData, 10, 1000000) &&
+             isValidTimestampNumber(data.createdAt) &&
+             (!('artisanId' in data) || validStringLength(data.artisanId, 0, 100)) &&
+             (!('artisanName' in data) || validStringLength(data.artisanName, 0, 100));
+    }
+
+    // Validação estrita das configurações da loja
+    function isValidStoreSettings(data) {
+      let allowedFields = ['contactPhone', 'storeName', 'updatedAt'];
+      let requiredFields = ['contactPhone', 'storeName', 'updatedAt'];
+
+      return hasRequiredFields(data, requiredFields) &&
+             hasOnlyAllowedFields(data, allowedFields) &&
+             validStringLength(data.contactPhone, 8, 20) &&
+             validStringLength(data.storeName, 1, 100) &&
+             isValidTimestampNumber(data.updatedAt);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Coleção de Produtos do Catálogo
+    match /products/{productId} {
+      // Leitura pública: qualquer visitante pode ver as peças do catálogo
+      allow read: if true;
+
+      // Criação: valida schema, tipos e limites de tamanho
+      allow create: if isValidProduct(request.resource.data);
+
+      // Atualização: valida schema e impede modificação do createdAt original
+      allow update: if isValidProduct(request.resource.data) &&
+                       (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+
+      // Exclusão: permitida apenas para documentos existentes
+      allow delete: if resource != null;
+    }
+
+    // Coleção de Configurações (ex: telefone do WhatsApp da loja)
+    match /settings/{docId} {
+      // Leitura pública: permite que o botão de WhatsApp carregue o número atual da loja
+      allow read: if true;
+
+      // Criação e atualização apenas para o documento 'store' com schema válido
+      allow create, update: if docId == 'store' && isValidStoreSettings(request.resource.data);
+
+      // Não permite deletar as configurações da loja
+      allow delete: if false;
+    }
+
+    // Bloqueio padrão para qualquer outra coleção ou caminho não especificado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
